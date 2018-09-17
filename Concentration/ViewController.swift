@@ -16,27 +16,36 @@ class ViewController: UIViewController {
     @IBOutlet weak var scoreLabel: UILabel!
     
     @IBAction func newGame(_ sender: UIButton) {
+        game = Concentration(numberOfPairs: (buttons.count + 1) / 2)
         game.startNewGame()
         updateUI()
+        emojiThemesTemp = emojiThemes
+        randomThemeIndex = Int(arc4random_uniform(UInt32(emojiThemes.count)))
     }
     
     @IBOutlet var buttons: [UIButton]!
     
     @IBAction func touchCard(_ sender: UIButton) {
         if let touchedCardIdx = buttons.index(of: sender){
-//            print(touchedCard)
             game.chooseCard(atIndex: touchedCardIdx)
             updateUI()
+            if game.getCardsLeft() == 0 {
+                endGame()
+            }
         }
         else{
             print("error")
         }
- 
-        
     }
     
-    func updateUI(){
-//        print("here")
+    func endGame() {
+        let alert = UIAlertController(title: "", message: "Congratulations! You Won!", preferredStyle: UIAlertControllerStyle.alert)
+        alert.addAction(UIAlertAction(title: "Exit", style: UIAlertActionStyle.default, handler: {action in self.game.exitGame()}))
+        alert.addAction(UIAlertAction(title: "New Game", style: UIAlertActionStyle.default, handler: {action in self.newGame(UIButton())}))
+        self.present(alert, animated: true, completion: nil)
+    }
+    
+    func updateUI() {
         flipCounter.text = "Flips: \(game.getFlipCounter())"
         scoreLabel.text = "Score: \(game.getScore())"
         
@@ -66,11 +75,13 @@ class ViewController: UIViewController {
     
     var emoji = [Int:String]()
     
+    lazy var emojiThemesTemp = emojiThemes
+    
     func getEmoji (for card: Card) -> String {
-        if let emojiChoices = emojiThemes[randomThemeIndex] {
+        if let emojiChoices = emojiThemesTemp[randomThemeIndex] {
             if emoji[card.identifier] == nil, emojiChoices.count > 0 {
                     let randomIndex = Int(arc4random_uniform(UInt32(emojiChoices.count)))
-                    emoji[card.identifier] = emojiThemes[randomThemeIndex]!.remove(at: randomIndex)
+                    emoji[card.identifier] = emojiThemesTemp[randomThemeIndex]!.remove(at: randomIndex)
             }
         }
         return emoji[card.identifier] ?? "?"
